@@ -1,0 +1,157 @@
+using System;
+using System.Collections.Generic;
+
+public interface ICommand
+{
+    void Execute();
+    void Undo();
+}
+
+public class Light
+{
+    public void On() => Console.WriteLine("Свет включен");
+    public void Off() => Console.WriteLine("Свет выключен");
+}
+
+public class AirConditioner
+{
+    public void On() => Console.WriteLine("Кондиционер включен");
+    public void Off() => Console.WriteLine("Кондиционер выключен");
+}
+
+public class TV
+{
+    public void On() => Console.WriteLine("Телевизор включен");
+    public void Off() => Console.WriteLine("Телевизор выключен");
+}
+
+public class LightOnCommand : ICommand
+{
+    private readonly Light _light;
+    public LightOnCommand(Light light) => _light = light;
+    public void Execute() => _light.On();
+    public void Undo() => _light.Off();
+}
+
+public class LightOffCommand : ICommand
+{
+    private readonly Light _light;
+    public LightOffCommand(Light light) => _light = light;
+    public void Execute() => _light.Off();
+    public void Undo() => _light.On();
+}
+
+public class AirConditionerOnCommand : ICommand
+{
+    private readonly AirConditioner _ac;
+    public AirConditionerOnCommand(AirConditioner ac) => _ac = ac;
+    public void Execute() => _ac.On();
+    public void Undo() => _ac.Off();
+}
+
+public class AirConditionerOffCommand : ICommand
+{
+    private readonly AirConditioner _ac;
+    public AirConditionerOffCommand(AirConditioner ac) => _ac = ac;
+    public void Execute() => _ac.Off();
+    public void Undo() => _ac.On();
+}
+
+public class TVOnCommand : ICommand
+{
+    private readonly TV _tv;
+    public TVOnCommand(TV tv) => _tv = tv;
+    public void Execute() => _tv.On();
+    public void Undo() => _tv.Off();
+}
+
+public class TVOffCommand : ICommand
+{
+    private readonly TV _tv;
+    public TVOffCommand(TV tv) => _tv = tv;
+    public void Execute() => _tv.Off();
+    public void Undo() => _tv.On();
+}
+
+public class MacroCommand : ICommand
+{
+    private readonly List<ICommand> _commands;
+    public MacroCommand(List<ICommand> commands) => _commands = commands;
+    public void Execute()
+    {
+        foreach (var command in _commands)
+            command.Execute();
+    }
+    public void Undo()
+    {
+        foreach (var command in _commands)
+            command.Undo();
+    }
+}
+
+public class RemoteControl
+{
+    private ICommand _lastCommand;
+    private ICommand _lastUndoneCommand;
+
+    public void SetCommand(ICommand command) => _lastCommand = command;
+
+    public void PressButton()
+    {
+        _lastCommand.Execute();
+        _lastUndoneCommand = null;
+    }
+
+    public void PressUndo()
+    {
+        if (_lastCommand != null)
+        {
+            _lastCommand.Undo();
+            _lastUndoneCommand = _lastCommand;
+            _lastCommand = null;
+        }
+    }
+
+    public void PressRedo()
+    {
+        if (_lastUndoneCommand != null)
+        {
+            _lastUndoneCommand.Execute();
+            _lastCommand = _lastUndoneCommand;
+            _lastUndoneCommand = null;
+        }
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var light = new Light();
+        var ac = new AirConditioner();
+        var tv = new TV();
+
+        var lightOn = new LightOnCommand(light);
+        var lightOff = new LightOffCommand(light);
+        var acOn = new AirConditionerOnCommand(ac);
+        var acOff = new AirConditionerOffCommand(ac);
+        var tvOn = new TVOnCommand(tv);
+        var tvOff = new TVOffCommand(tv);
+
+        var remote = new RemoteControl();
+
+        var partyMode = new MacroCommand(new List<ICommand> { lightOn, acOn, tvOn });
+
+        remote.SetCommand(partyMode);
+        remote.PressButton();
+        remote.PressUndo();
+
+        remote.SetCommand(lightOn);
+        remote.PressButton();
+        remote.PressUndo();
+
+        remote.SetCommand(acOn);
+        remote.PressButton();
+        remote.PressRedo();
+    }
+}
