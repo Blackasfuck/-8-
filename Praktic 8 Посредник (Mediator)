@@ -1,0 +1,75 @@
+using System;
+using System.Collections.Generic;
+
+public interface IMediator
+{
+    void SendMessage(string message, User sender);
+    void AddUser(User user);
+}
+
+public class ChatRoom : IMediator
+{
+    private List<User> _users = new List<User>();
+
+    public void AddUser(User user) => _users.Add(user);
+
+    public void SendMessage(string message, User sender)
+    {
+        foreach (var user in _users)
+        {
+            if (user != sender)
+                user.ReceiveMessage(message, sender);
+        }
+    }
+}
+
+public abstract class User
+{
+    protected IMediator _mediator;
+    protected string _name;
+
+    public User(IMediator mediator, string name)
+    {
+        _mediator = mediator;
+        _name = name;
+    }
+
+    public abstract void SendMessage(string message);
+    public abstract void ReceiveMessage(string message, User sender);
+}
+
+public class ConcreteUser : User
+{
+    public ConcreteUser(IMediator mediator, string name) : base(mediator, name) {}
+
+    public override void SendMessage(string message)
+    {
+        Console.WriteLine($"{_name} отправляет сообщение: {message}");
+        _mediator.SendMessage(message, this);
+    }
+
+    public override void ReceiveMessage(string message, User sender)
+    {
+        Console.WriteLine($"{_name} получает сообщение от {sender._name}: {message}");
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var chatRoom = new ChatRoom();
+
+        var user1 = new ConcreteUser(chatRoom, "Алиса");
+        var user2 = new ConcreteUser(chatRoom, "Боб");
+        var user3 = new ConcreteUser(chatRoom, "Чарли");
+
+        chatRoom.AddUser(user1);
+        chatRoom.AddUser(user2);
+        chatRoom.AddUser(user3);
+
+        user1.SendMessage("Привет всем!");
+        user2.SendMessage("Привет, Алиса!");
+        user3.SendMessage("Привет, Боб!");
+    }
+}
