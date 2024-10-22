@@ -1,0 +1,68 @@
+using System;
+
+public abstract class ReportGenerator
+{
+    public void GenerateReport()
+    {
+        PrepareData();
+        FormatReport();
+        SaveReport();
+        if (CustomerWantsEmail())
+        {
+            SendReportByEmail();
+        }
+    }
+
+    protected abstract void PrepareData();
+    protected abstract void FormatReport();
+    protected abstract void SaveReport();
+
+    protected virtual bool CustomerWantsEmail() => false;
+    protected virtual void SendReportByEmail() => Console.WriteLine("Отчет отправлен по электронной почте");
+}
+
+public class PdfReport : ReportGenerator
+{
+    protected override void PrepareData() => Console.WriteLine("Подготовка данных для PDF отчета");
+    protected override void FormatReport() => Console.WriteLine("Форматирование PDF отчета");
+    protected override void SaveReport() => Console.WriteLine("Сохранение PDF отчета");
+}
+
+public class ExcelReport : ReportGenerator
+{
+    protected override void PrepareData() => Console.WriteLine("Подготовка данных для Excel отчета");
+    protected override void FormatReport() => Console.WriteLine("Форматирование Excel отчета");
+    protected override void SaveReport() => Console.WriteLine("Сохранение Excel отчета");
+
+    protected override bool CustomerWantsEmail()
+    {
+        Console.WriteLine("Отправить отчет по электронной почте? (да/нет)");
+        return Console.ReadLine()?.ToLower() == "да";
+    }
+}
+
+public class HtmlReport : ReportGenerator
+{
+    protected override void PrepareData() => Console.WriteLine("Подготовка данных для HTML отчета");
+    protected override void FormatReport() => Console.WriteLine("Форматирование HTML отчета");
+    protected override void SaveReport() => Console.WriteLine("Сохранение HTML отчета");
+}
+
+class Program
+{
+    static void Main()
+    {
+        ReportGenerator pdfReport = new PdfReport();
+        ReportGenerator excelReport = new ExcelReport();
+        ReportGenerator htmlReport = new HtmlReport();
+
+        Console.WriteLine("Создание PDF отчета:");
+        pdfReport.GenerateReport();
+
+        Console.WriteLine("\nСоздание Excel отчета:");
+        excelReport.GenerateReport();
+
+        Console.WriteLine("\nСоздание HTML отчета:");
+        htmlReport.GenerateReport();
+    }
+}
